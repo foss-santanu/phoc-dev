@@ -1,0 +1,54 @@
+TARGET = phoc1
+
+echo "Generating expression parser code ..."
+@!call peg -o $TARGET.peg.c $TARGET.peg
+ifnret 0 exit 1
+
+do ifnexist $TARGET.peg.c
+    echo "Exit compilation: No expression parser to compile ..."
+    exit 2
+done
+
+echo "Compiling expression evaluator ..."
+compile $TARGET.c
+linkexec $TARGET
+rm $TARGET.d $TARGET.o
+echo "Expression evaluator compiled ..."
+
+echo "Testing expression evaluator ..."
+@!readexec result tests/test1.sh
+do ifnot "$result"="20"
+    @!readexec test cat tests/test1.sh
+    echo "Test failed: $test"
+    exit 0
+done
+
+@!readexec result tests/test2.sh
+do ifnot "$result"="9"
+    @!readexec test cat tests/test2.sh
+    echo "Test failed: $test"
+    exit 0
+done
+
+@!readexec result tests/test3.sh
+do ifnot "$result"="6"
+    @!readexec test cat tests/test3.sh
+    echo "Test failed: $test"
+    exit 0
+done
+
+@!readexec result tests/test4.sh
+do ifnot "$result"="10"
+    @!readexec test cat tests/test4.sh
+    echo "Test failed: $test"
+    exit 0
+done
+
+@!readexec result tests/test5.sh
+do ifnot "$result"="5"
+    @!readexec test cat tests/test5.sh
+    echo "Test failed: $test"
+    exit 0
+done
+
+echo "Test complete ..."

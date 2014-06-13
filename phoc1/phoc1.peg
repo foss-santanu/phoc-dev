@@ -1,0 +1,48 @@
+# Grammar
+
+Expr        <-    SPACE Sum EOL                                      { printf("%f\n", pop()); }
+                  / (!(EOL / 'q') .)* EOL                            { printf("error: quiting hoc1\n"); \
+                                                                       exit(1); }
+                  / 'q' EOL                                          { printf("bye\n"); exit(0);}
+
+Sum         <-    Product ( PLUS  Product                            { double r = pop(), l = pop(); \
+                                                                       push(l + r); }
+                  / MINUS Product                                    { double r = pop(), l = pop(); \
+                                                                       push(l - r); }
+                  )*
+
+Product     <-    Operand ( TIMES  Operand                           { double r = pop(), l = pop(); \
+                                                                       push(l * r); }
+                  / DIVIDE Operand                                   { double r = pop(), l = pop(); \
+                                                                       push(l / r); }
+                  )*
+
+Operand     <-    SGNValue
+                  / Value
+
+## SGNValue    <-    OPEN? '-' Value CLOSE?
+## This production rule was throwing error
+## for expressions like ((-9)), ((-9)*3)/4,
+## (8-(-2)*5)/2-(2+2), etc. probably due to
+## left recurssion. But it was behaving as expected
+## for (((9))), ((9)*2), etc.
+## Reason: Greedy matching in PEG.
+## Detailed explanation: http://goo.gl/oLNMnJ
+
+SGNValue    <-    '-' NUMBER                                         { push(-1*atof(yytext)); }
+                  / '-' OPEN Sum CLOSE                               { double d = pop(); push(-1*d); }
+
+Value       <-    NUMBER                                             { push(atof(yytext)); }
+                  / OPEN Sum CLOSE
+
+# Lexemes
+
+NUMBER  <-  < [0-9]+ ('.' [0-9]+)? >  SPACE
+PLUS    <-  '+'                       SPACE
+MINUS   <-  '-'                       SPACE
+TIMES   <-  '*'                       SPACE
+DIVIDE  <-  '/'                       SPACE
+OPEN    <-  '('                       SPACE
+CLOSE   <-  ')'                       SPACE
+SPACE   <-  [ \t]*
+EOL     <-  '\n' / '\r\n' / '\r'
